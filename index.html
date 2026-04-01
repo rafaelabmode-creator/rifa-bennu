@@ -9,542 +9,170 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --rose: #C0385A;
-      --rose-light: #FBEAEE;
-      --rose-mid: #E8849A;
-      --rose-dark: #8A2040;
-      --dark: #2C1A22;
-      --muted: #8A6070;
-      --bg: #FDF7F9;
-      --surface: #FFFFFF;
-      --border: rgba(192,56,90,0.15);
-      --text: #2C1A22;
-      --text-secondary: #7A5565;
-      --green: #1D9E75;
-      --amber: #B45309;
-      --amber-bg: #FEF3C7;
+      --rose: #C0385A; --rose-light: #FBEAEE; --rose-mid: #E8849A;
+      --dark: #2C1A22; --muted: #8A6070; --bg: #FDF7F9; --surface: #FFFFFF;
+      --border: rgba(192,56,90,0.15); --text: #2C1A22; --text-secondary: #7A5565;
+      --green: #1D9E75; --amber: #B45309; --amber-bg: #FEF3C7;
     }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    .page { max-width: 480px; margin: 0 auto; padding: 0 1rem 3rem; }
+    .view { display: none; } .view.active { display: block; }
 
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-    }
+    .loading-overlay { position: fixed; inset: 0; background: rgba(253,247,249,0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 999; gap: 14px; }
+    .loading-overlay.hidden { display: none; }
+    .spinner { width: 36px; height: 36px; border: 3px solid var(--rose-mid); border-top-color: var(--rose); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-overlay p { font-size: 13px; color: var(--muted); }
 
-    .page {
-      max-width: 480px;
-      margin: 0 auto;
-      padding: 0 1rem 3rem;
-    }
+    .site-header { text-align: center; padding: 2rem 0 1.5rem; }
+    .site-header .eyebrow { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+    .site-header h1 { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 600; color: var(--rose); line-height: 1.2; }
+    .site-header p { font-size: 13px; color: var(--text-secondary); margin-top: 6px; line-height: 1.5; }
+    .price-badge { display: inline-block; background: var(--rose-light); color: var(--rose); font-size: 12px; font-weight: 500; padding: 4px 14px; border-radius: 20px; margin-top: 10px; border: 1px solid rgba(192,56,90,0.2); }
 
-    /* VIEWS */
-    .view { display: none; }
-    .view.active { display: block; }
-
-    /* HEADER */
-    .site-header {
-      text-align: center;
-      padding: 2rem 0 1.5rem;
-    }
-    .site-header .eyebrow {
-      font-size: 11px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 6px;
-    }
-    .site-header h1 {
-      font-family: 'Playfair Display', serif;
-      font-size: 28px;
-      font-weight: 600;
-      color: var(--rose);
-      line-height: 1.2;
-    }
-    .site-header p {
-      font-size: 13px;
-      color: var(--text-secondary);
-      margin-top: 6px;
-      line-height: 1.5;
-    }
-    .price-badge {
-      display: inline-block;
-      background: var(--rose-light);
-      color: var(--rose);
-      font-size: 12px;
-      font-weight: 500;
-      padding: 4px 14px;
-      border-radius: 20px;
-      margin-top: 10px;
-      border: 1px solid rgba(192,56,90,0.2);
-    }
-
-    /* STATS */
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin-bottom: 1.25rem;
-    }
-    .stat {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px 8px;
-      text-align: center;
-    }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 1.25rem; }
+    .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 8px; text-align: center; }
     .stat .num { font-size: 22px; font-weight: 500; color: var(--text); }
     .stat .lbl { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
-    .stat.sold .num { color: var(--rose); }
-    .stat.avail .num { color: var(--green); }
+    .stat.sold .num { color: var(--rose); } .stat.avail .num { color: var(--green); }
 
-    /* LEGEND */
-    .legend {
-      display: flex;
-      gap: 14px;
-      margin-bottom: 10px;
-      flex-wrap: wrap;
-    }
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 12px;
-      color: var(--text-secondary);
-    }
+    .legend { display: flex; gap: 14px; margin-bottom: 10px; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-secondary); }
     .dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
     .dot.free { background: #F5EEF1; border: 1px solid rgba(192,56,90,0.2); }
-    .dot.sold { background: var(--rose); }
-    .dot.pending { background: #F0C040; }
+    .dot.sold { background: var(--rose); } .dot.pending { background: #F0C040; }
 
-    /* NUMBER GRID */
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(10, 1fr);
-      gap: 5px;
-      margin-bottom: 1.25rem;
-    }
-    .num-btn {
-      aspect-ratio: 1;
-      border-radius: 7px;
-      border: 1px solid rgba(192,56,90,0.2);
-      background: #F5EEF1;
-      cursor: pointer;
-      font-size: 11px;
-      font-weight: 500;
-      color: var(--muted);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.12s;
-      user-select: none;
-      font-family: 'DM Sans', sans-serif;
-    }
-    .num-btn:hover:not(.sold):not(.pending) {
-      border-color: var(--rose);
-      color: var(--rose);
-      background: var(--rose-light);
-      transform: scale(1.06);
-    }
-    .num-btn.sold {
-      background: var(--rose);
-      color: white;
-      border-color: var(--rose);
-      cursor: default;
-    }
-    .num-btn.pending {
-      background: var(--amber-bg);
-      color: var(--amber);
-      border-color: #F0C040;
-      cursor: default;
-    }
+    .grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; margin-bottom: 1.25rem; }
+    .num-btn { aspect-ratio: 1; border-radius: 7px; border: 1px solid rgba(192,56,90,0.2); background: #F5EEF1; cursor: pointer; font-size: 11px; font-weight: 500; color: var(--muted); display: flex; align-items: center; justify-content: center; transition: all 0.12s; user-select: none; font-family: 'DM Sans', sans-serif; }
+    .num-btn:hover:not(.sold):not(.pending) { border-color: var(--rose); color: var(--rose); background: var(--rose-light); transform: scale(1.06); }
+    .num-btn.sold { background: var(--rose); color: white; border-color: var(--rose); cursor: default; }
+    .num-btn.pending { background: var(--amber-bg); color: var(--amber); border-color: #F0C040; cursor: default; }
 
-    /* DIVIDER */
-    .divider {
-      height: 1px;
-      background: var(--border);
-      margin: 1.25rem 0;
-    }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.25rem; margin-bottom: 1rem; }
+    .card h2 { font-size: 16px; font-weight: 500; color: var(--text); margin-bottom: 1rem; }
+    .num-display { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; background: var(--rose); color: white; border-radius: 10px; font-size: 16px; font-weight: 500; margin-bottom: 14px; }
 
-    /* CARD */
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 1.25rem;
-      margin-bottom: 1rem;
-    }
-    .card h2 {
-      font-size: 16px;
-      font-weight: 500;
-      color: var(--text);
-      margin-bottom: 1rem;
-    }
-
-    /* SELECTED NUMBER DISPLAY */
-    .num-display {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 44px;
-      height: 44px;
-      background: var(--rose);
-      color: white;
-      border-radius: 10px;
-      font-size: 16px;
-      font-weight: 500;
-      margin-bottom: 14px;
-    }
-
-    /* FORM */
     .field { margin-bottom: 14px; }
-    .field label {
-      display: block;
-      font-size: 12px;
-      color: var(--text-secondary);
-      margin-bottom: 5px;
-      font-weight: 500;
-    }
-    .field input {
-      width: 100%;
-      padding: 10px 12px;
-      font-size: 14px;
-      border: 1px solid rgba(192,56,90,0.25);
-      border-radius: 8px;
-      background: var(--surface);
-      color: var(--text);
-      outline: none;
-      font-family: 'DM Sans', sans-serif;
-      transition: border-color 0.15s, box-shadow 0.15s;
-    }
-    .field input:focus {
-      border-color: var(--rose);
-      box-shadow: 0 0 0 3px rgba(192,56,90,0.1);
-    }
+    .field label { display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 5px; font-weight: 500; }
+    .field input { width: 100%; padding: 10px 12px; font-size: 14px; border: 1px solid rgba(192,56,90,0.25); border-radius: 8px; background: var(--surface); color: var(--text); outline: none; font-family: 'DM Sans', sans-serif; transition: border-color 0.15s, box-shadow 0.15s; }
+    .field input:focus { border-color: var(--rose); box-shadow: 0 0 0 3px rgba(192,56,90,0.1); }
 
-    /* PIX BOX */
-    .pix-box {
-      background: var(--rose-light);
-      border: 1px solid rgba(192,56,90,0.25);
-      border-radius: 12px;
-      padding: 1.25rem;
-      text-align: center;
-      margin-bottom: 1rem;
-    }
+    .pix-box { background: var(--rose-light); border: 1px solid rgba(192,56,90,0.25); border-radius: 12px; padding: 1.25rem; text-align: center; margin-bottom: 1rem; }
     .pix-label { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
     .pix-value { font-size: 15px; font-weight: 500; color: var(--dark); word-break: break-all; }
-    .pix-amount {
-      font-family: 'Playfair Display', serif;
-      font-size: 30px;
-      color: var(--rose);
-      margin: 10px 0;
-    }
-    .copy-btn {
-      background: var(--rose);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 9px 22px;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      font-family: 'DM Sans', sans-serif;
-      margin-top: 12px;
-      transition: opacity 0.15s;
-    }
-    .copy-btn:hover { opacity: 0.88; }
+    .pix-amount { font-family: 'Playfair Display', serif; font-size: 30px; color: var(--rose); margin: 10px 0; }
+    .copy-btn { background: var(--rose); color: white; border: none; border-radius: 8px; padding: 9px 22px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; margin-top: 12px; }
     .copy-btn:active { transform: scale(0.97); }
 
-    /* BUTTONS */
-    .btn-primary {
-      width: 100%;
-      background: var(--rose);
-      color: white;
-      border: none;
-      border-radius: 10px;
-      padding: 13px;
-      font-size: 15px;
-      font-weight: 500;
-      cursor: pointer;
-      font-family: 'DM Sans', sans-serif;
-      transition: opacity 0.15s, transform 0.1s;
-    }
-    .btn-primary:hover { opacity: 0.9; }
+    .btn-primary { width: 100%; background: var(--rose); color: white; border: none; border-radius: 10px; padding: 13px; font-size: 15px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; }
     .btn-primary:active { transform: scale(0.98); }
-
-    .btn-secondary {
-      width: 100%;
-      background: transparent;
-      color: var(--text-secondary);
-      border: 1px solid rgba(192,56,90,0.2);
-      border-radius: 10px;
-      padding: 11px;
-      font-size: 14px;
-      cursor: pointer;
-      font-family: 'DM Sans', sans-serif;
-      margin-top: 8px;
-      transition: background 0.12s;
-    }
+    .btn-secondary { width: 100%; background: transparent; color: var(--text-secondary); border: 1px solid rgba(192,56,90,0.2); border-radius: 10px; padding: 11px; font-size: 14px; cursor: pointer; font-family: 'DM Sans', sans-serif; margin-top: 8px; }
     .btn-secondary:hover { background: var(--rose-light); }
 
-    /* NOTICE */
-    .notice {
-      background: var(--rose-light);
-      border: 1px solid rgba(192,56,90,0.2);
-      border-radius: 8px;
-      padding: 10px 14px;
-      font-size: 12px;
-      color: var(--muted);
-      line-height: 1.5;
-      margin-bottom: 1rem;
-    }
+    .notice { background: var(--rose-light); border: 1px solid rgba(192,56,90,0.2); border-radius: 8px; padding: 10px 14px; font-size: 12px; color: var(--muted); line-height: 1.5; margin-bottom: 1rem; }
 
-    /* SUCCESS */
-    .success-icon {
-      width: 60px;
-      height: 60px;
-      background: var(--rose-light);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 1rem;
-      font-size: 26px;
-    }
-    .success-num-box {
-      background: var(--rose-light);
-      border: 1px solid rgba(192,56,90,0.2);
-      border-radius: 12px;
-      padding: 1rem;
-      text-align: center;
-      margin-bottom: 1.5rem;
-    }
+    .success-icon { width: 60px; height: 60px; background: var(--rose-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; font-size: 26px; }
+    .success-num-box { background: var(--rose-light); border: 1px solid rgba(192,56,90,0.2); border-radius: 12px; padding: 1rem; text-align: center; margin-bottom: 1.5rem; }
 
-    /* ADMIN */
-    .admin-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 1rem;
-      padding-top: 1.5rem;
-    }
+    .admin-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; padding-top: 1.5rem; }
     .admin-title { font-size: 17px; font-weight: 500; }
-    .admin-back {
-      font-size: 12px;
-      color: var(--rose);
-      cursor: pointer;
-      background: none;
-      border: none;
-      font-family: 'DM Sans', sans-serif;
-    }
+    .admin-back { font-size: 12px; color: var(--rose); cursor: pointer; background: none; border: none; font-family: 'DM Sans', sans-serif; }
 
     .tab-row { display: flex; gap: 6px; margin-bottom: 1rem; }
-    .tab {
-      flex: 1;
-      padding: 7px;
-      font-size: 12px;
-      border: 1px solid rgba(192,56,90,0.2);
-      border-radius: 8px;
-      background: transparent;
-      cursor: pointer;
-      font-family: 'DM Sans', sans-serif;
-      color: var(--text-secondary);
-      transition: all 0.12s;
-    }
+    .tab { flex: 1; padding: 7px; font-size: 12px; border: 1px solid rgba(192,56,90,0.2); border-radius: 8px; background: transparent; cursor: pointer; font-family: 'DM Sans', sans-serif; color: var(--text-secondary); }
     .tab.active { background: var(--rose); color: white; border-color: var(--rose); }
 
     .buyers-list { display: flex; flex-direction: column; gap: 8px; margin-top: 1rem; }
-    .buyer-item {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 10px 12px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .buyer-num {
-      width: 34px;
-      height: 34px;
-      background: var(--rose);
-      color: white;
-      border-radius: 7px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      font-weight: 500;
-      flex-shrink: 0;
-    }
+    .buyer-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; }
+    .buyer-num { width: 34px; height: 34px; background: var(--rose); color: white; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; flex-shrink: 0; }
     .buyer-info { flex: 1; min-width: 0; }
     .buyer-name { font-size: 13px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .buyer-phone { font-size: 11px; color: var(--text-secondary); }
     .buyer-status { font-size: 11px; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
     .buyer-status.paid { background: #D1FAE5; color: #065F46; }
     .buyer-status.pend { background: var(--amber-bg); color: var(--amber); }
-    .remove-btn {
-      background: none; border: none; color: var(--text-secondary);
-      cursor: pointer; font-size: 15px; padding: 4px; line-height: 1;
-    }
+    .remove-btn { background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 15px; padding: 4px; line-height: 1; }
     .remove-btn:hover { color: var(--rose); }
-    .mark-paid-btn {
-      background: none;
-      border: 1px solid #059669;
-      color: #059669;
-      border-radius: 5px;
-      font-size: 11px;
-      padding: 3px 7px;
-      cursor: pointer;
-      font-family: 'DM Sans', sans-serif;
-      white-space: nowrap;
-    }
-    .empty {
-      text-align: center;
-      padding: 2.5rem;
-      color: var(--text-secondary);
-      font-size: 13px;
-    }
+    .mark-paid-btn { background: none; border: 1px solid #059669; color: #059669; border-radius: 5px; font-size: 11px; padding: 3px 7px; cursor: pointer; font-family: 'DM Sans', sans-serif; white-space: nowrap; }
+    .empty { text-align: center; padding: 2.5rem; color: var(--text-secondary); font-size: 13px; }
 
-    .admin-add {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1rem;
-      margin-bottom: 1rem;
-    }
-    .admin-add p {
-      font-size: 12px;
-      color: var(--text-secondary);
-      margin-bottom: 8px;
-    }
-    .admin-add-row {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-    .admin-add-row input {
-      padding: 8px 10px;
-      font-size: 13px;
-      border: 1px solid rgba(192,56,90,0.25);
-      border-radius: 7px;
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'DM Sans', sans-serif;
-      outline: none;
-    }
+    .admin-add { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; margin-bottom: 1rem; }
+    .admin-add p { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; }
+    .admin-add-row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .admin-add-row input { padding: 8px 10px; font-size: 13px; border: 1px solid rgba(192,56,90,0.25); border-radius: 7px; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; outline: none; }
     .admin-add-row input:focus { border-color: var(--rose); }
-    .admin-add-row .inp-num { width: 60px; }
-    .admin-add-row .inp-name { flex: 1; min-width: 120px; }
-    .admin-add-row .inp-phone { width: 130px; }
-    .admin-add-row .add-btn {
-      background: var(--rose);
-      color: white;
-      border: none;
-      border-radius: 7px;
-      padding: 8px 14px;
-      font-size: 13px;
-      cursor: pointer;
-      font-family: 'DM Sans', sans-serif;
-      white-space: nowrap;
-    }
+    .inp-num { width: 60px; } .inp-name { flex: 1; min-width: 120px; } .inp-phone { width: 130px; }
+    .add-btn { background: var(--rose); color: white; border: none; border-radius: 7px; padding: 8px 14px; font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; white-space: nowrap; }
 
-    .footer-admin {
-      text-align: center;
-      margin-top: 2rem;
-    }
-    .footer-admin button {
-      background: none;
-      border: none;
-      font-size: 12px;
-      color: rgba(192,56,90,0.4);
-      cursor: pointer;
-      font-family: 'DM Sans', sans-serif;
-    }
+    .footer-admin { text-align: center; margin-top: 2rem; }
+    .footer-admin button { background: none; border: none; font-size: 12px; color: rgba(192,56,90,0.35); cursor: pointer; font-family: 'DM Sans', sans-serif; }
     .footer-admin button:hover { color: var(--rose); }
+
+    .realtime-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--green); }
+    .realtime-dot { width: 7px; height: 7px; background: var(--green); border-radius: 50%; animation: pulse 2s infinite; flex-shrink: 0; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
   </style>
 </head>
 <body>
+
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+  <p>Carregando a rifa...</p>
+</div>
+
 <div class="page">
 
-  <!-- ====== VIEW: MAIN ====== -->
-  <div class="view active" id="view-main">
+  <!-- MAIN -->
+  <div class="view" id="view-main">
     <div class="site-header">
       <p class="eyebrow">Apoie essa causa</p>
       <h1>Rifa Coletivo Bennu</h1>
       <p>Registrando nossa Associação para ajudar<br>mulheres vítimas de violência</p>
       <span class="price-badge">R$ 10,00 por número</span>
     </div>
-
-    <div class="stats">
-      <div class="stat">
-        <div class="num" id="stat-total">100</div>
-        <div class="lbl">Total</div>
-      </div>
-      <div class="stat sold">
-        <div class="num" id="stat-sold">0</div>
-        <div class="lbl">Vendidos</div>
-      </div>
-      <div class="stat avail">
-        <div class="num" id="stat-avail">100</div>
-        <div class="lbl">Disponíveis</div>
-      </div>
+    <div style="text-align:center;margin-bottom:12px;">
+      <span class="realtime-badge"><span class="realtime-dot"></span> Atualizado em tempo real</span>
     </div>
-
+    <div class="stats">
+      <div class="stat"><div class="num" id="stat-total">100</div><div class="lbl">Total</div></div>
+      <div class="stat sold"><div class="num" id="stat-sold">—</div><div class="lbl">Vendidos</div></div>
+      <div class="stat avail"><div class="num" id="stat-avail">—</div><div class="lbl">Disponíveis</div></div>
+    </div>
     <div class="legend">
       <div class="legend-item"><div class="dot free"></div> Disponível</div>
       <div class="legend-item"><div class="dot sold"></div> Vendido</div>
       <div class="legend-item"><div class="dot pending"></div> Aguardando PIX</div>
     </div>
-
     <div class="grid" id="num-grid"></div>
-
-    <p style="font-size:12px;color:var(--text-secondary);text-align:center;margin-bottom:1.5rem;">
-      Toque em um número disponível para reservar o seu
-    </p>
-
-    <div class="footer-admin">
-      <button onclick="showView('view-admin-login')">acesso administrativo</button>
-    </div>
+    <p style="font-size:12px;color:var(--text-secondary);text-align:center;margin-bottom:1.5rem;">Toque em um número disponível para reservar o seu</p>
+    <div class="footer-admin"><button onclick="showView('view-admin-login')">acesso administrativo</button></div>
   </div>
 
-  <!-- ====== VIEW: REGISTER ====== -->
+  <!-- REGISTER -->
   <div class="view" id="view-register">
     <div class="site-header">
       <h1>Reservar número</h1>
       <p>Preencha seus dados para continuar</p>
     </div>
-
     <div class="card">
       <div class="num-display" id="disp-num">00</div>
       <h2>Seus dados</h2>
-      <div class="field">
-        <label>Nome completo</label>
-        <input type="text" id="inp-name" placeholder="Maria da Silva" autocomplete="name" />
-      </div>
-      <div class="field">
-        <label>Telefone / WhatsApp</label>
-        <input type="tel" id="inp-phone" placeholder="(16) 99999-9999" autocomplete="tel" />
-      </div>
+      <div class="field"><label>Nome completo</label><input type="text" id="inp-name" placeholder="Maria da Silva" autocomplete="name" /></div>
+      <div class="field"><label>Telefone / WhatsApp</label><input type="tel" id="inp-phone" placeholder="(16) 99999-9999" autocomplete="tel" /></div>
     </div>
-
     <button class="btn-primary" onclick="confirmRegister()">Continuar para pagamento</button>
     <button class="btn-secondary" onclick="showView('view-main')">← Voltar</button>
   </div>
 
-  <!-- ====== VIEW: PIX ====== -->
+  <!-- PIX -->
   <div class="view" id="view-pix">
     <div class="site-header">
       <h1>Pagamento PIX</h1>
       <p>Sua reserva está quase confirmada!</p>
     </div>
-
     <div class="card">
-      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:14px;line-height:1.6;">
-        Faça o PIX para o Coletivo Bennu e envie o comprovante via WhatsApp para confirmar sua participação.
-      </p>
-
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:14px;line-height:1.6;">Faça o PIX para o Coletivo Bennu e envie o comprovante via WhatsApp para confirmar sua participação.</p>
       <div class="pix-box">
         <div class="pix-label">Número reservado</div>
         <div id="pix-num-disp" style="font-size:22px;font-weight:500;color:var(--rose);margin-bottom:6px;"></div>
@@ -556,25 +184,18 @@
         <div class="pix-value" style="font-size:13px;">Coletivo Bennu</div>
         <button class="copy-btn" id="copy-btn" onclick="copyPix()">Copiar chave PIX</button>
       </div>
-
-      <div class="notice">
-        Após o pagamento, envie o comprovante para confirmar sua participação. O número ficará reservado por 24 horas.
-      </div>
+      <div class="notice">Após o pagamento, envie o comprovante para confirmar sua participação. O número ficará reservado por 24 horas.</div>
     </div>
-
     <button class="btn-primary" onclick="finishPurchase()">Concluir reserva</button>
     <button class="btn-secondary" onclick="showView('view-main')">Voltar ao início</button>
   </div>
 
-  <!-- ====== VIEW: SUCCESS ====== -->
+  <!-- SUCCESS -->
   <div class="view" id="view-success">
     <div style="text-align:center;padding:2.5rem 1rem 1rem;">
       <div class="success-icon">♥</div>
       <h1 style="font-family:'Playfair Display',serif;font-size:26px;color:var(--rose);margin-bottom:10px;">Obrigada!</h1>
-      <p style="font-size:14px;color:var(--text-secondary);margin-bottom:1.5rem;line-height:1.6;">
-        Sua reserva foi registrada com sucesso.<br>
-        Não esqueça de enviar o comprovante do PIX para confirmar sua participação!
-      </p>
+      <p style="font-size:14px;color:var(--text-secondary);margin-bottom:1.5rem;line-height:1.6;">Sua reserva foi registrada com sucesso.<br>Não esqueça de enviar o comprovante do PIX para confirmar!</p>
       <div class="success-num-box">
         <p style="font-size:12px;color:var(--muted);margin-bottom:4px;">Número reservado</p>
         <p style="font-size:36px;font-weight:500;color:var(--rose);" id="success-num"></p>
@@ -584,7 +205,7 @@
     </div>
   </div>
 
-  <!-- ====== VIEW: ADMIN LOGIN ====== -->
+  <!-- ADMIN LOGIN -->
   <div class="view" id="view-admin-login">
     <div class="site-header">
       <h1>Painel administrativo</h1>
@@ -592,37 +213,23 @@
     </div>
     <div class="card">
       <h2>Entre com a senha</h2>
-      <div class="field">
-        <label>Senha</label>
-        <input type="password" id="inp-pass" placeholder="••••••" onkeydown="if(event.key==='Enter')adminLogin()" />
-      </div>
+      <div class="field"><label>Senha</label><input type="password" id="inp-pass" placeholder="••••••" onkeydown="if(event.key==='Enter')adminLogin()" /></div>
       <button class="btn-primary" onclick="adminLogin()">Entrar</button>
       <button class="btn-secondary" onclick="showView('view-main')">← Voltar</button>
     </div>
   </div>
 
-  <!-- ====== VIEW: ADMIN PANEL ====== -->
+  <!-- ADMIN PANEL -->
   <div class="view" id="view-admin">
     <div class="admin-header">
       <span class="admin-title">Painel administrativo</span>
       <button class="admin-back" onclick="showView('view-main')">← Voltar à rifa</button>
     </div>
-
     <div class="stats" style="margin-bottom:1rem;">
-      <div class="stat">
-        <div class="num" id="adm-total">0</div>
-        <div class="lbl">Reservados</div>
-      </div>
-      <div class="stat sold">
-        <div class="num" id="adm-pending">0</div>
-        <div class="lbl">Aguardando</div>
-      </div>
-      <div class="stat avail">
-        <div class="num" id="adm-revenue">R$0</div>
-        <div class="lbl">Confirmados</div>
-      </div>
+      <div class="stat"><div class="num" id="adm-total">0</div><div class="lbl">Reservados</div></div>
+      <div class="stat sold"><div class="num" id="adm-pending">0</div><div class="lbl">Aguardando</div></div>
+      <div class="stat avail"><div class="num" id="adm-revenue">R$0</div><div class="lbl">Arrecadado</div></div>
     </div>
-
     <div class="admin-add">
       <p>Adicionar número vendido manualmente:</p>
       <div class="admin-add-row">
@@ -632,205 +239,194 @@
         <button class="add-btn" onclick="adminAddBuyer()">+ Adicionar</button>
       </div>
     </div>
-
     <div class="tab-row">
       <button class="tab active" id="tab-all" onclick="filterBuyers('all')">Todos</button>
       <button class="tab" id="tab-paid" onclick="filterBuyers('paid')">Confirmados</button>
       <button class="tab" id="tab-pend" onclick="filterBuyers('pending')">Aguardando</button>
     </div>
-
     <div class="buyers-list" id="buyers-list"></div>
   </div>
 
 </div>
 
-<script>
-  const PIX_KEY = 'coletivobennu@gmail.com';
-  const ADMIN_PASS = 'bennu2025';
-  const STORAGE_KEY = 'bennu_rifa_buyers';
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, doc, setDoc, deleteDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyD_d_wwAwuLFXmlnh4bU8fdTAVi8Uj9jQo",
+    authDomain: "rifa-bennu.firebaseapp.com",
+    projectId: "rifa-bennu",
+    storageBucket: "rifa-bennu.firebasestorage.app",
+    messagingSenderId: "425607164770",
+    appId: "1:425607164770:web:4e54a93900c65f9d0cf23b"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const rifaCol = collection(db, "numeros");
+
+  const ADMIN_PASS = "bennu2025";
+  const PIX_KEY = "coletivobennu@gmail.com";
 
   let buyers = {};
   let currentNum = null;
-  let filterMode = 'all';
+  let filterMode = "all";
 
-  function loadData() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      buyers = raw ? JSON.parse(raw) : {};
-    } catch(e) { buyers = {}; }
-  }
+  // REALTIME LISTENER — atualiza tudo em tempo real
+  onSnapshot(rifaCol, (snapshot) => {
+    buyers = {};
+    snapshot.forEach(d => { buyers[d.id] = d.data(); });
+    document.getElementById("loading").classList.add("hidden");
+    const active = document.querySelector(".view.active");
+    if (!active || active.id === "view-main") renderGrid();
+    if (active && active.id === "view-admin") renderAdmin();
+    // Se não há view ativa ainda, mostra a main
+    if (!active) showView("view-main");
+  });
 
-  function saveData() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(buyers)); } catch(e) {}
-  }
-
-  function showView(id) {
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    if (id === 'view-main') renderGrid();
-    if (id === 'view-admin') renderAdmin();
+  window.showView = function(id) {
+    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+    if (id === "view-main") renderGrid();
+    if (id === "view-admin") renderAdmin();
     window.scrollTo(0, 0);
-  }
+  };
 
   function renderGrid() {
-    const grid = document.getElementById('num-grid');
-    grid.innerHTML = '';
+    const grid = document.getElementById("num-grid");
+    grid.innerHTML = "";
     let soldCount = 0;
-
     for (let i = 1; i <= 100; i++) {
-      const n = String(i).padStart(2, '0');
-      const btn = document.createElement('button');
-      btn.className = 'num-btn';
+      const n = String(i).padStart(2, "0");
+      const btn = document.createElement("button");
+      btn.className = "num-btn";
       btn.textContent = n;
       const b = buyers[n];
       if (b) {
         soldCount++;
-        btn.classList.add(b.status === 'paid' ? 'sold' : 'pending');
+        btn.classList.add(b.status === "paid" ? "sold" : "pending");
         btn.title = b.name;
       } else {
         btn.onclick = () => selectNum(n);
       }
       grid.appendChild(btn);
     }
-
-    document.getElementById('stat-sold').textContent = soldCount;
-    document.getElementById('stat-avail').textContent = 100 - soldCount;
+    document.getElementById("stat-sold").textContent = soldCount;
+    document.getElementById("stat-avail").textContent = 100 - soldCount;
   }
 
   function selectNum(n) {
+    if (buyers[n]) { alert("Este número acabou de ser reservado. Escolha outro!"); return; }
     currentNum = n;
-    document.getElementById('disp-num').textContent = n;
-    document.getElementById('inp-name').value = '';
-    document.getElementById('inp-phone').value = '';
-    showView('view-register');
+    document.getElementById("disp-num").textContent = n;
+    document.getElementById("inp-name").value = "";
+    document.getElementById("inp-phone").value = "";
+    showView("view-register");
   }
 
-  function confirmRegister() {
-    const name = document.getElementById('inp-name').value.trim();
-    const phone = document.getElementById('inp-phone').value.trim();
-    if (!name) { alert('Por favor, informe seu nome completo.'); return; }
-    if (!phone) { alert('Por favor, informe seu telefone.'); return; }
-    if (buyers[currentNum]) {
-      alert('Esse número acabou de ser reservado. Por favor, escolha outro.');
-      showView('view-main');
-      return;
-    }
-    buyers[currentNum] = { name, phone, status: 'pending', ts: Date.now() };
-    saveData();
-    document.getElementById('pix-num-disp').textContent = 'Número ' + currentNum;
-    showView('view-pix');
-  }
+  window.confirmRegister = async function() {
+    const name = document.getElementById("inp-name").value.trim();
+    const phone = document.getElementById("inp-phone").value.trim();
+    if (!name) { alert("Por favor, informe seu nome completo."); return; }
+    if (!phone) { alert("Por favor, informe seu telefone."); return; }
+    if (buyers[currentNum]) { alert("Este número acabou de ser reservado. Por favor, escolha outro."); showView("view-main"); return; }
+    try {
+      await setDoc(doc(db, "numeros", currentNum), { name, phone, status: "pending", ts: Date.now() });
+      document.getElementById("pix-num-disp").textContent = "Número " + currentNum;
+      showView("view-pix");
+    } catch(e) { alert("Erro ao registrar. Verifique sua conexão e tente novamente."); }
+  };
 
-  function copyPix() {
-    const btn = document.getElementById('copy-btn');
+  window.copyPix = function() {
+    const btn = document.getElementById("copy-btn");
     navigator.clipboard.writeText(PIX_KEY).then(() => {
-      btn.textContent = '✓ Copiado!';
-      setTimeout(() => btn.textContent = 'Copiar chave PIX', 2500);
-    }).catch(() => {
-      prompt('Copie a chave PIX:', PIX_KEY);
-    });
-  }
+      btn.textContent = "✓ Copiado!";
+      setTimeout(() => btn.textContent = "Copiar chave PIX", 2500);
+    }).catch(() => { prompt("Copie a chave PIX:", PIX_KEY); });
+  };
 
-  function finishPurchase() {
-    document.getElementById('success-num').textContent = currentNum;
+  window.finishPurchase = function() {
+    document.getElementById("success-num").textContent = currentNum;
     const b = buyers[currentNum];
-    document.getElementById('success-name').textContent = b ? b.name : '';
-    showView('view-success');
-  }
+    document.getElementById("success-name").textContent = b ? b.name : "";
+    showView("view-success");
+  };
 
-  function adminLogin() {
-    const pass = document.getElementById('inp-pass').value;
-    if (pass === ADMIN_PASS) {
-      document.getElementById('inp-pass').value = '';
-      showView('view-admin');
-    } else {
-      alert('Senha incorreta.');
-    }
-  }
+  window.adminLogin = function() {
+    const pass = document.getElementById("inp-pass").value;
+    if (pass === ADMIN_PASS) { document.getElementById("inp-pass").value = ""; showView("view-admin"); }
+    else { alert("Senha incorreta."); }
+  };
 
-  function filterBuyers(mode) {
+  window.filterBuyers = function(mode) {
     filterMode = mode;
-    ['all', 'paid', 'pend'].forEach(t => document.getElementById('tab-' + t).classList.remove('active'));
-    const tabId = mode === 'pending' ? 'tab-pend' : 'tab-' + mode;
-    document.getElementById(tabId).classList.add('active');
+    ["all","paid","pend"].forEach(t => document.getElementById("tab-" + t).classList.remove("active"));
+    document.getElementById(mode === "pending" ? "tab-pend" : "tab-" + mode).classList.add("active");
     renderAdmin();
-  }
+  };
 
   function renderAdmin() {
-    const list = document.getElementById('buyers-list');
-    list.innerHTML = '';
-
+    const list = document.getElementById("buyers-list");
+    list.innerHTML = "";
     const entries = Object.entries(buyers).sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
     let paidCount = 0, pendCount = 0;
-    entries.forEach(([, b]) => { b.status === 'paid' ? paidCount++ : pendCount++; });
+    entries.forEach(([, b]) => { b.status === "paid" ? paidCount++ : pendCount++; });
+    document.getElementById("adm-total").textContent = entries.length;
+    document.getElementById("adm-pending").textContent = pendCount;
+    document.getElementById("adm-revenue").textContent = "R$" + (paidCount * 10);
 
-    document.getElementById('adm-total').textContent = entries.length;
-    document.getElementById('adm-pending').textContent = pendCount;
-    document.getElementById('adm-revenue').textContent = 'R$' + (paidCount * 10);
-
-    const filtered = entries.filter(([, b]) => filterMode === 'all' || b.status === filterMode);
-    if (!filtered.length) {
-      list.innerHTML = '<div class="empty">Nenhum registro encontrado.</div>';
-      return;
-    }
+    const filtered = entries.filter(([, b]) => filterMode === "all" || b.status === filterMode);
+    if (!filtered.length) { list.innerHTML = '<div class="empty">Nenhum registro encontrado.</div>'; return; }
 
     filtered.forEach(([num, b]) => {
-      const item = document.createElement('div');
-      item.className = 'buyer-item';
+      const item = document.createElement("div");
+      item.className = "buyer-item";
       item.innerHTML = `
         <div class="buyer-num">${num}</div>
         <div class="buyer-info">
-          <div class="buyer-name">${escHtml(b.name)}</div>
-          <div class="buyer-phone">${escHtml(b.phone)}</div>
+          <div class="buyer-name">${esc(b.name)}</div>
+          <div class="buyer-phone">${esc(b.phone)}</div>
         </div>
-        <span class="buyer-status ${b.status === 'paid' ? 'paid' : 'pend'}">
-          ${b.status === 'paid' ? 'Confirmado' : 'Aguardando'}
-        </span>
-        ${b.status !== 'paid' ? `<button class="mark-paid-btn" onclick="markPaid('${num}')">Confirmar</button>` : ''}
+        <span class="buyer-status ${b.status === "paid" ? "paid" : "pend"}">${b.status === "paid" ? "Confirmado" : "Aguardando"}</span>
+        ${b.status !== "paid" ? `<button class="mark-paid-btn" onclick="markPaid('${num}')">Confirmar</button>` : ""}
         <button class="remove-btn" onclick="removeBuyer('${num}')" title="Remover">✕</button>
       `;
       list.appendChild(item);
     });
   }
 
-  function markPaid(num) {
-    if (buyers[num]) {
-      buyers[num].status = 'paid';
-      saveData();
-      renderAdmin();
+  window.markPaid = async function(num) {
+    try { await updateDoc(doc(db, "numeros", num), { status: "paid" }); }
+    catch(e) { alert("Erro ao confirmar pagamento."); }
+  };
+
+  window.removeBuyer = async function(num) {
+    if (confirm("Remover número " + num + " (" + buyers[num].name + ")?\nEssa ação não pode ser desfeita.")) {
+      try { await deleteDoc(doc(db, "numeros", num)); }
+      catch(e) { alert("Erro ao remover."); }
     }
-  }
+  };
 
-  function removeBuyer(num) {
-    if (confirm('Remover número ' + num + ' (' + buyers[num].name + ')?\nEssa ação não pode ser desfeita.')) {
-      delete buyers[num];
-      saveData();
-      renderAdmin();
-    }
-  }
+  window.adminAddBuyer = async function() {
+    const rawNum = parseInt(document.getElementById("adm-num").value || 0);
+    const num = String(rawNum).padStart(2, "0");
+    const name = document.getElementById("adm-aname").value.trim();
+    const phone = document.getElementById("adm-aphone").value.trim();
+    if (rawNum < 1 || rawNum > 100) { alert("Número deve ser entre 1 e 100."); return; }
+    if (!name) { alert("Informe o nome do comprador."); return; }
+    if (buyers[num]) { alert("O número " + num + " já está registrado para " + buyers[num].name + "."); return; }
+    try {
+      await setDoc(doc(db, "numeros", num), { name, phone: phone || "—", status: "pending", ts: Date.now() });
+      document.getElementById("adm-num").value = "";
+      document.getElementById("adm-aname").value = "";
+      document.getElementById("adm-aphone").value = "";
+    } catch(e) { alert("Erro ao adicionar."); }
+  };
 
-  function adminAddBuyer() {
-    const rawNum = parseInt(document.getElementById('adm-num').value || 0);
-    const num = String(rawNum).padStart(2, '0');
-    const name = document.getElementById('adm-aname').value.trim();
-    const phone = document.getElementById('adm-aphone').value.trim();
-    if (rawNum < 1 || rawNum > 100) { alert('Número deve ser entre 1 e 100.'); return; }
-    if (!name) { alert('Informe o nome do comprador.'); return; }
-    if (buyers[num]) { alert('O número ' + num + ' já está registrado para ' + buyers[num].name + '.'); return; }
-    buyers[num] = { name, phone: phone || '—', status: 'pending', ts: Date.now() };
-    saveData();
-    document.getElementById('adm-num').value = '';
-    document.getElementById('adm-aname').value = '';
-    document.getElementById('adm-aphone').value = '';
-    renderAdmin();
+  function esc(str) {
+    return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
   }
-
-  function escHtml(str) {
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  loadData();
-  renderGrid();
 </script>
 </body>
 </html>
